@@ -16,6 +16,8 @@ from urlparse import urlparse
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
+from django.core.urlresolvers import resolve
+from django.views.static import serve
 
 from djangoflash.context_processors import CONTEXT_VAR
 from djangoflash.models import FlashScope
@@ -51,13 +53,16 @@ class FlashMiddleware(object):
     def _is_request_to_static_content(self, request):
         """Returns whether the given request points to a static resource.
         """
-        if not getattr(settings, 'FLASH_IGNORE_MEDIA', False):
+        if getattr(settings, 'FLASH_IGNORE_MEDIA', False):
+            # Only checks the request URL if the project was configured to do so
+            media_path = urlparse(settings.MEDIA_URL)[2]
+            request_path = urlparse(request.path_info)[2]
+            return request_path.startswith(media_path)
+        elif getattr(settings, 'FLASH_IGNORE_STATIC_SERVE', False):
+            # Ignores requests that resolve to 'django.views.static.serve' view
+            return resolve(request.path_info)[0] == serve
+        else:
             return False
-
-        # Only checks the request URL if the project was configured to do so
-        media_path = urlparse(settings.MEDIA_URL)[2]
-        request_path = urlparse(request.path_info)[2]
-        return request_path.startswith(media_path)
 
     def process_request(self, request):
         """This method is called by the Django framework when a *request* hits

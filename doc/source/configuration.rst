@@ -36,9 +36,12 @@ the *flash* gets updated by :ref:`a middleware <middleware>`, messages might be
 removed from the *flash* by accident if the response causes the web browser to
 issue requests to fetch static files.
 
-To make Django-Flash work well with the :meth:`django.views.static.serve` view,
-you can add the setting ``FLASH_IGNORE_MEDIA`` to your project's
-``settings.py`` file::
+Django-Flash has two configuration options to make Django-Flash work well with
+the :meth:`django.views.static.serve` view: ``FLASH_IGNORE_MEDIA``and
+``FLASH_IGNORE_STATIC_SERVE``.
+
+If you are using ``MEDIA_URL`` you can add the setting ``FLASH_IGNORE_MEDIA``
+to your project's ``settings.py`` file::
 
     MEDIA_URL = '/media/'
 
@@ -49,6 +52,17 @@ you can add the setting ``FLASH_IGNORE_MEDIA`` to your project's
 So, if ``FLASH_IGNORE_MEDIA`` is ``True``, Django-Flash won't remove any
 message from the *flash* if the request URL starts with ``MEDIA_URL``.
 
+Otherwise you can add the setting ``FLASH_IGNORE_STATIC_SERVE`` to your
+project's ``settings.py`` file::
+
+    # Suppose you have a way to identify the environment in which project runs
+    if development_mode():
+        FLASH_IGNORE_STATIC_SERVE = True # Default value: False
+
+if ``FLASH_IGNORE_STATIC_SERVE`` is ``True``, Django-Flash won't remove any
+message from the *flash* for any request url that utilizes
+:meth:`django.views.static.serve`. NOTE: There is a significant performance
+cost to ``FLASH_IGNORE_STATIC_SERVE`` and should only be used in development.
 
 Flash storage backends
 ``````````````````````

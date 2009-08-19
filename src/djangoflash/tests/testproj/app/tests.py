@@ -129,7 +129,8 @@ class IntegrationTestCase(TestCase):
 
         # Requests to static resources should trigger the flash update
         settings.FLASH_IGNORE_MEDIA = False
-
+        settings.FLASH_IGNORE_STATIC_SERVE = False
+        
         self.response = self.client.get(settings.MEDIA_URL + 'test.css')
         self.assertEqual(200, self.response.status_code)
 
@@ -137,15 +138,36 @@ class IntegrationTestCase(TestCase):
         self.response = self.client.get(reverse(views.render_template))
         self.assertFalse('message' in self._flash())
 
-    def test_request_to_serve_view_with_ignore(self):
-        """Integration: request to static resources should not trigger the flash update, if properly configured.
+    def test_request_to_serve_view_with_media_url_ignore(self):
+        """Integration: request to static resources should not trigger the flash update using FLASH_IGNORE_MEDIA.
         """
         self.response = self.client.get(reverse(views.set_flash_var))
         self.assertEqual('Message', self._flash()['message'])
 
         # Requests to static resources should not trigger the flash update
         settings.FLASH_IGNORE_MEDIA = True
-        
+        settings.FLASH_IGNORE_STATIC_SERVE = False
+
+        self.response = self.client.get(settings.MEDIA_URL + 'test.css')
+        self.assertEqual(200, self.response.status_code)
+
+        self.response = self.client.get(reverse(views.render_template))
+        self.assertEqual('Message', self._flash()['message'])
+
+        # Flash value will be removed when this request hits the app
+        self.response = self.client.get(reverse(views.render_template))
+        self.assertFalse('message' in self._flash())
+
+    def test_request_to_serve_view_with_resolve_static_ignore(self):
+        """Integration: request to static resources should not trigger the flash update using FLASH_IGNORE_STATIC_SERVE.
+        """
+        self.response = self.client.get(reverse(views.set_flash_var))
+        self.assertEqual('Message', self._flash()['message'])
+
+        # Requests to static resources should not trigger the flash update
+        settings.FLASH_IGNORE_MEDIA = False
+        settings.FLASH_IGNORE_STATIC_SERVE = True
+
         self.response = self.client.get(settings.MEDIA_URL + 'test.css')
         self.assertEqual(200, self.response.status_code)
 
